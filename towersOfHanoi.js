@@ -4,18 +4,20 @@ class Game {
   }
 
   printBoard () {
-    this.towers.forEach(el => {
-      console.log(JSON.stringify(el));
-    });
+    console.log(JSON.stringify(this.towers));
   }
 
-  promptMove (...input) {
+  promptMove (reader, callback) {
     this.printBoard();
-    let [towers] = [input]
-    let getInput = () => {
-      this.move(towers[0], towers[1])
-    }
-    getInput();
+
+    reader.question("Choose a starting tower: ", start => {
+      let startTower = parseInt(start);
+      reader.question("Choose an ending tower: ", end => {
+        let endTower = parseInt(end);
+        callback(startTower, endTower);
+      });
+    });
+    
   }
 
   validMove (startTower, endTower) {
@@ -30,11 +32,9 @@ class Game {
 
   move (startTower, endTower) {
     if(this.validMove(startTower, endTower)) {
-      let startDisc = this.towers[startTower].pop();
-      this.towers[endTower].push(startDisc);
+      this.towers[endTower].push(this.towers[startTower].pop());
       return true;
     } else {
-      console.log("Invalid move")
       return false;
     }
   }
@@ -48,12 +48,19 @@ class Game {
     }
   }
 
-  run (completionCallback) {
-    this.promptMove(0,1);
-    if (this.isWon()) {
-      completionCallback();
+  run (reader, completionCallback) {
+    this.promptMove(reader, (startTower, endTower) => {
+      if (!this.move(startTower, endTower)) {
+        console.log("Invalid move!")
+      }
+    if (!this.isWon()) {
+      this.run(reader, completionCallback);
     } else {
-      this.run();
+      this.printBoard();
+      console.log("You win!")
+      completionCallback();
     }
-  }
+  });
 }
+}
+module.exports = Game;
